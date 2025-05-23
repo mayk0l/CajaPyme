@@ -3,21 +3,18 @@ import { useCajaStore } from '../store/useStore';
 import { useConfigStore } from '../store/configStore';
 import type { Movimiento } from '../store/useStore';
 import { saveAs } from 'file-saver';
-import * as api from '../api/movimientosApi';
 import type { MovimientoInput } from '../api/movimientosApi';
+import * as api from '../api/movimientosApi';
 
 const PAGE_SIZE = 10;
 
 type MovimientoId = number;
 
 export function CajaResumen() {
-  const { saldo, ingresos, egresos, movimientos, reset, setMovimientos, isLoading, setLoading } = useCajaStore();
+  const { saldo, ingresos, egresos, movimientos, isLoading, setLoading, setMovimientos, reset } = useCajaStore();
   const store = useConfigStore();
 
   // Estados para formularios y UI
-  const [monto, setMonto] = useState('0');
-  const [descripcion, setDescripcion] = useState('');
-  const [categoria, setCategoria] = useState('general');
   const [error, setError] = useState('');
   const [filtroTipo, setFiltroTipo] = useState('todos');
   const [filtroCategoria, setFiltroCategoria] = useState('todas');
@@ -30,120 +27,37 @@ export function CajaResumen() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<MovimientoId | null>(null);
   const [deleteTargetDesc, setDeleteTargetDesc] = useState('');
-  // Edición
-  const [editandoId, setEditandoId] = useState<MovimientoId | null>(null);
-  const [editMonto, setEditMonto] = useState('');
-  const [editDescripcion, setEditDescripcion] = useState('');
-  const [editFecha, setEditFecha] = useState('');
-  const [editCategoria, setEditCategoria] = useState('general');
+
+  const [monto, setMonto] = useState('');
+  const [descripcion, setDescripcion] = useState('');
+  const [categoria, setCategoria] = useState('general');
 
   const formatoCLP = (valor: number) => valor.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', minimumFractionDigits: 0 });
-  const montoNumber = Number(monto);
 
   // Sincroniza movimientos desde API si es necesario
-  useEffect(() => {
-    const syncMovimientosFromApi = async () => {
-      try {
-        setLoading(true);
-        const movs = await api.obtenerMovimientos();
-        setMovimientos(movs);
-        const ingresos = movs.filter((m: Movimiento) => m.tipo === 'ingreso').reduce((acc, m) => acc + m.monto, 0);
-        const egresos = movs.filter((m: Movimiento) => m.tipo === 'egreso').reduce((acc, m) => acc + m.monto, 0);
-        const saldo = ingresos - egresos;
-        useCajaStore.setState({ ingresos, egresos, saldo });
-      } catch {
-        setToast('Error al cargar datos. Intente nuevamente.');
-        setTimeout(() => setToast(''), 3000);
-      } finally {
-        setLoading(false);
-      }
-    };
-    syncMovimientosFromApi();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Sincroniza movimientos y totales tras cambios
-  const syncMovimientosYTotales = async () => {
+  const syncMovimientosFromApi = async () => {
     try {
       setLoading(true);
       const movs = await api.obtenerMovimientos();
       setMovimientos(movs);
+      // Calcula totales y saldo y actualiza el store global
       const ingresos = movs.filter((m: Movimiento) => m.tipo === 'ingreso').reduce((acc, m) => acc + m.monto, 0);
       const egresos = movs.filter((m: Movimiento) => m.tipo === 'egreso').reduce((acc, m) => acc + m.monto, 0);
       const saldo = ingresos - egresos;
       useCajaStore.setState({ ingresos, egresos, saldo });
     } catch {
-      setToast('Error al sincronizar. Intente nuevamente.');
+      setToast('Error al cargar datos. Intente nuevamente.');
       setTimeout(() => setToast(''), 3000);
     } finally {
       setLoading(false);
     }
   };
+  useEffect(() => {
+    syncMovimientosFromApi();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  // Agregar movimiento
-  const onIngreso = async () => {
-    if (montoNumber > 0 && descripcion.trim() !== '') {
-      try {
-        setLoading(true);
-        const nuevo: MovimientoInput = {
-          tipo: 'ingreso',
-          monto: montoNumber,
-          descripcion,
-          fecha: new Date().toISOString(),
-          categoria,
-        };
-        await api.agregarMovimiento(nuevo);
-        await syncMovimientosYTotales();
-        setMonto('0');
-        setDescripcion('');
-        setCategoria('general');
-        setError('');
-        setToast('Ingreso registrado');
-        setTimeout(() => setToast(''), 2000);
-      } catch {
-        setToast('Error al registrar. Intente nuevamente.');
-        setTimeout(() => setToast(''), 3000);
-      } finally {
-        setLoading(false);
-      }
-    } else {
-      setError('Debes ingresar un monto mayor a 0 y una descripción.');
-      setTimeout(() => setError(''), 3000);
-    }
-  };
-
-  const onEgreso = async () => {
-    if (montoNumber > 0 && descripcion.trim() !== '') {
-      try {
-        setLoading(true);
-        const nuevo: MovimientoInput = {
-          tipo: 'egreso',
-          monto: montoNumber,
-          descripcion,
-          fecha: new Date().toISOString(),
-          categoria,
-        };
-        await api.agregarMovimiento(nuevo);
-        await syncMovimientosYTotales();
-        setMonto('0');
-        setDescripcion('');
-        setCategoria('general');
-        setError('');
-        setToast('Egreso registrado');
-        setTimeout(() => setToast(''), 2000);
-      } catch {
-        setToast('Error al registrar. Intente nuevamente.');
-        setTimeout(() => setToast(''), 3000);
-      } finally {
-        setLoading(false);
-      }
-    } else {
-      setError('Debes ingresar un monto mayor a 0 y una descripción.');
-      setTimeout(() => setError(''), 3000);
-    }
-  };
-
-  // Reset de caja
+  // Reset de caja refactorizado
   const handleReset = () => setShowResetModal(true);
   const confirmReset = async () => {
     try {
@@ -155,7 +69,6 @@ export function CajaResumen() {
       useCajaStore.setState({ ingresos: 0, egresos: 0, saldo: 0 });
       setToast('Caja reiniciada');
       setShowResetModal(false);
-      await syncMovimientosYTotales();
       setTimeout(() => setToast(''), 2000);
     } catch {
       setToast('Error al reiniciar. Intente nuevamente.');
@@ -166,7 +79,7 @@ export function CajaResumen() {
   };
   const cancelReset = () => setShowResetModal(false);
 
-  // Eliminar movimiento
+  // Eliminar movimiento refactorizado
   const handleEliminarMovimiento = (id: MovimientoId, desc: string) => {
     setDeleteTargetId(id);
     setDeleteTargetDesc(desc);
@@ -177,11 +90,12 @@ export function CajaResumen() {
     try {
       setLoading(true);
       await api.eliminarMovimientoApi(deleteTargetId);
+      // Refresca la lista de movimientos después de eliminar
+      await syncMovimientosFromApi();
       setToast('Movimiento eliminado');
       setShowDeleteModal(false);
       setDeleteTargetId(null);
       setDeleteTargetDesc('');
-      await syncMovimientosYTotales();
       setTimeout(() => setToast(''), 2000);
     } catch {
       setToast('Error al eliminar. Intente nuevamente.');
@@ -194,46 +108,6 @@ export function CajaResumen() {
     setShowDeleteModal(false);
     setDeleteTargetId(null);
     setDeleteTargetDesc('');
-  };
-
-  // Edición de movimiento
-  const handleEditar = (mov: Movimiento) => {
-    setEditandoId(mov.id);
-    setEditMonto(mov.monto.toString());
-    setEditDescripcion(mov.descripcion);
-    setEditFecha(mov.fecha.slice(0, 16)); // formato yyyy-MM-ddTHH:mm
-    setEditCategoria(mov.categoria || 'general');
-  };
-  const handleCancelarEdicion = () => {
-    setEditandoId(null);
-    setEditMonto('');
-    setEditDescripcion('');
-    setEditFecha('');
-    setEditCategoria('general');
-  };
-  const handleGuardarEdicion = async (id: MovimientoId) => {
-    try {
-      setLoading(true);
-      await api.editarMovimiento(id, {
-        monto: Number(editMonto),
-        descripcion: editDescripcion,
-        fecha: editFecha,
-        categoria: editCategoria,
-      });
-      setToast('Movimiento editado');
-      setEditandoId(null);
-      setEditMonto('');
-      setEditDescripcion('');
-      setEditFecha('');
-      setEditCategoria('general');
-      await syncMovimientosYTotales();
-      setTimeout(() => setToast(''), 2000);
-    } catch {
-      setToast('Error al editar. Intente nuevamente.');
-      setTimeout(() => setToast(''), 3000);
-    } finally {
-      setLoading(false);
-    }
   };
 
   // Filtros (incluye categoría)
@@ -532,6 +406,60 @@ export function CajaResumen() {
     }
   };
 
+  // Filtros
+  const handleFiltroTipo = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setFiltroTipo(e.target.value);
+    setPagina(1);
+  };
+  const handleFiltroCategoria = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setFiltroCategoria(e.target.value);
+    setPagina(1);
+  };
+  const handleFiltroFecha = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFiltroFecha(e.target.value);
+    setPagina(1);
+  };
+
+  // Handler para registrar movimiento
+  const handleRegistrarMovimiento = async (tipo: 'ingreso' | 'egreso') => {
+    if (!monto || isNaN(Number(monto)) || Number(monto) <= 0) {
+      setError('El monto debe ser mayor a 0');
+      return;
+    }
+    if (!descripcion || descripcion.length < 2) {
+      setError('La descripción es obligatoria');
+      return;
+    }
+    if (!categoria) {
+      setError('La categoría es obligatoria');
+      return;
+    }
+    try {
+      setLoading(true);
+      const nuevo: MovimientoInput = {
+        tipo,
+        monto: Number(monto),
+        descripcion,
+        fecha: new Date().toISOString(),
+        categoria,
+      };
+      await api.agregarMovimiento(nuevo);
+      // Refresca la lista de movimientos después de agregar
+      await syncMovimientosFromApi();
+      setMonto('');
+      setDescripcion('');
+      setCategoria('general');
+      setError('');
+      setToast(`${tipo === 'ingreso' ? 'Ingreso' : 'Egreso'} registrado`);
+      setTimeout(() => setToast(''), 2000);
+    } catch {
+      setToast('Error al registrar. Intente nuevamente.');
+      setTimeout(() => setToast(''), 3000);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-6">
       {isLoading && (
@@ -611,7 +539,6 @@ export function CajaResumen() {
         </h3>
         
         <form className="grid grid-cols-1 md:grid-cols-3 gap-5" onSubmit={e => e.preventDefault()}>
-          {/* Campo Monto */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Monto</label>
             <div className="relative">
@@ -628,8 +555,6 @@ export function CajaResumen() {
               />
             </div>
           </div>
-          
-          {/* Campo Descripción */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
             <input
@@ -640,8 +565,6 @@ export function CajaResumen() {
               placeholder="Descripción del movimiento"
             />
           </div>
-          
-          {/* Campo Categoría */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Categoría</label>
             <select
@@ -656,34 +579,33 @@ export function CajaResumen() {
               <option value="otros">Otros</option>
             </select>
           </div>
-          
-          {/* Botones */}
           <div className="md:col-span-3 flex flex-wrap gap-3 mt-2">
             <button
               type="button"
-              onClick={onIngreso}
+              onClick={() => handleRegistrarMovimiento('ingreso')}
               className="flex-1 md:flex-none bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-md font-medium flex items-center justify-center gap-2 transition-colors"
+              disabled={isLoading}
             >
               <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
               </svg>
               Ingreso
             </button>
-            
             <button
               type="button"
-              onClick={onEgreso}
+              onClick={() => handleRegistrarMovimiento('egreso')}
               className="flex-1 md:flex-none bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-md font-medium flex items-center justify-center gap-2 transition-colors"
+              disabled={isLoading}
             >
               <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M20 12H4" />
               </svg>
               Egreso
             </button>
-            
             <button 
               onClick={handleReset}
               className="flex-1 md:flex-none bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-2 rounded-md font-medium flex items-center justify-center gap-2 transition-colors ml-auto"
+              type="button"
             >
               <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582M20 20v-5h-.581M5.635 19.364A9 9 0 104.582 9.582" />
@@ -691,8 +613,6 @@ export function CajaResumen() {
               Reiniciar
             </button>
           </div>
-          
-          {/* Mensaje de error */}
           {error && (
             <div className="md:col-span-3 text-sm text-red-600 bg-red-50 p-3 rounded-md border-l-4 border-red-500">
               {error}
@@ -732,7 +652,7 @@ export function CajaResumen() {
               <label className="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
               <select 
                 value={filtroTipo} 
-                onChange={e => setFiltroTipo(e.target.value)}
+                onChange={handleFiltroTipo}
                 className="w-full border border-gray-300 rounded-md px-3 py-2"
               >
                 <option value="todos">Todos</option>
@@ -746,7 +666,7 @@ export function CajaResumen() {
               <label className="block text-sm font-medium text-gray-700 mb-1">Categoría</label>
               <select 
                 value={filtroCategoria} 
-                onChange={e => setFiltroCategoria(e.target.value)}
+                onChange={handleFiltroCategoria}
                 className="w-full border border-gray-300 rounded-md px-3 py-2"
               >
                 {categoriasUnicas.map(cat => (
@@ -761,7 +681,7 @@ export function CajaResumen() {
               <input 
                 type="date" 
                 value={filtroFecha} 
-                onChange={e => setFiltroFecha(e.target.value)}
+                onChange={handleFiltroFecha}
                 className="w-full border border-gray-300 rounded-md px-3 py-2"
               />
             </div>
@@ -841,138 +761,48 @@ export function CajaResumen() {
               )}
 
               {movimientosPagina.map((mov) => (
-                <tr key={mov.id} className={`hover:bg-gray-50 transition-colors ${editandoId === mov.id ? 'bg-blue-50' : ''}`}>
-                  {editandoId === mov.id ? (
-                    /* Modo edición */
-                    <>
-                      <td className="px-4 py-2">
-                        <input
-                          type="datetime-local"
-                          value={editFecha}
-                          onChange={e => setEditFecha(e.target.value)}
-                          className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
-                        />
-                      </td>
-                      <td className="px-4 py-2 whitespace-nowrap">
-                        {mov.tipo === 'ingreso' ? (
-                          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                            <svg className="h-3 w-3 mr-1" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                            </svg>
-                            Ingreso
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                            <svg className="h-3 w-3 mr-1" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M20 12H4" />
-                            </svg>
-                            Egreso
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-4 py-2">
-                        <select
-                          value={editCategoria}
-                          onChange={e => setEditCategoria(e.target.value)}
-                          className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
-                        >
-                          <option value="general">General</option>
-                          <option value="ventas">Ventas</option>
-                          <option value="compras">Compras</option>
-                          <option value="servicios">Servicios</option>
-                          <option value="otros">Otros</option>
-                        </select>
-                      </td>
-                      <td className="px-4 py-2">
-                        <input
-                          type="number"
-                          min="0"
-                          value={editMonto}
-                          onChange={e => setEditMonto(e.target.value)}
-                          className="w-full border border-gray-300 rounded px-2 py-1 text-sm text-right"
-                        />
-                      </td>
-                      <td className="px-4 py-2">
-                        <input
-                          type="text"
-                          value={editDescripcion}
-                          onChange={e => setEditDescripcion(e.target.value)}
-                          className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
-                        />
-                      </td>
-                      <td className="px-4 py-2 whitespace-nowrap text-center">
-                        <button 
-                          onClick={() => handleGuardarEdicion(Number(mov.id))} 
-                          className="text-green-600 hover:text-green-900 text-sm font-medium mr-2"
-                        >
-                          Guardar
-                        </button>
-                        <button 
-                          onClick={handleCancelarEdicion} 
-                          className="text-gray-600 hover:text-gray-900 text-sm font-medium"
-                        >
-                          Cancelar
-                        </button>
-                      </td>
-                    </>
-                  ) : (
-                    /* Vista normal */
-                    <>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
-                        {new Date(mov.fecha).toLocaleString()}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        {mov.tipo === 'ingreso' ? (
-                          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                            <svg className="h-3 w-3 mr-1" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                            </svg>
-                            Ingreso
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                            <svg className="h-3 w-3 mr-1" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M20 12H4" />
-                            </svg>
-                            Egreso
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium 
-                          ${mov.categoria === 'ventas' ? 'bg-blue-100 text-blue-800' : ''}
-                          ${mov.categoria === 'compras' ? 'bg-yellow-100 text-yellow-800' : ''}
-                          ${mov.categoria === 'servicios' ? 'bg-purple-100 text-purple-800' : ''}
-                          ${mov.categoria === 'otros' ? 'bg-gray-100 text-gray-800' : ''}
-                          ${mov.categoria === 'general' || !mov.categoria ? 'bg-green-100 text-green-800' : ''}
-                        `}>
-                          {mov.categoria ? mov.categoria.charAt(0).toUpperCase() + mov.categoria.slice(1) : 'General'}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-right font-medium">
-                        <span className={mov.tipo === 'ingreso' ? 'text-green-600' : 'text-red-600'}>
-                          {mov.tipo === 'ingreso' ? '+' : '-'}{formatoCLP(mov.monto)}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-800 max-w-xs truncate">
-                        {mov.descripcion}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-center">
-                        <button 
-                          onClick={() => handleEditar(mov)} 
-                          className="text-blue-600 hover:text-blue-900 text-sm font-medium mr-2"
-                        >
-                          Editar
-                        </button>
-                        <button 
-                          onClick={() => handleEliminarMovimiento(Number(mov.id), mov.descripcion)} 
-                          className="text-red-600 hover:text-red-900 text-sm font-medium"
-                        >
-                          Eliminar
-                        </button>
-                      </td>
-                    </>
-                  )}
+                <tr key={mov.id} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
+                    {new Date(mov.fecha).toLocaleString()}
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    {mov.tipo === 'ingreso' ? (
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        Ingreso
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                        Egreso
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium 
+                      ${mov.categoria === 'ventas' ? 'bg-blue-100 text-blue-800' : ''}
+                      ${mov.categoria === 'compras' ? 'bg-yellow-100 text-yellow-800' : ''}
+                      ${mov.categoria === 'servicios' ? 'bg-purple-100 text-purple-800' : ''}
+                      ${mov.categoria === 'otros' ? 'bg-gray-100 text-gray-800' : ''}
+                      ${mov.categoria === 'general' || !mov.categoria ? 'bg-green-100 text-green-800' : ''}
+                    `}>
+                      {mov.categoria ? mov.categoria.charAt(0).toUpperCase() + mov.categoria.slice(1) : 'General'}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-right font-medium">
+                    <span className={mov.tipo === 'ingreso' ? 'text-green-600' : 'text-red-600'}>
+                      {mov.tipo === 'ingreso' ? '+' : '-'}{formatoCLP(mov.monto)}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-800 max-w-xs truncate">
+                    {mov.descripcion}
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-center">
+                    <button 
+                      onClick={() => handleEliminarMovimiento(Number(mov.id), mov.descripcion)} 
+                      className="text-red-600 hover:text-red-900 text-sm font-medium"
+                    >
+                      Eliminar
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>

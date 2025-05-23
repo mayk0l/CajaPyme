@@ -1,0 +1,54 @@
+### Registro de usuario válido
+POST http://localhost:4000/api/auth/register
+Content-Type: application/json
+
+{
+  "nombre": "Admin Test",
+  "email": "admin@cajapyme.cl",
+  "password": "admin1234",
+  "rol": "admin"
+}
+
+### Login válido
+POST http://localhost:4000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@cajapyme.cl",
+  "password": "admin1234"
+}
+
+### Registro inválido (email mal formado)
+POST http://localhost:4000/api/auth/register
+Content-Type: application/json
+
+{
+  "nombre": "Test",
+  "email": "no-es-email",
+  "password": "123456"
+}
+
+### Crear movimiento (requiere token)
+# Reemplaza <TOKEN> por el JWT obtenido en login
+POST http://localhost:4000/api/movimientos
+Content-Type: application/json
+Authorization: Bearer <TOKEN>
+
+{
+  "tipo": "ingreso",
+  "monto": 10000,
+  "categoria": "ventas",
+  "descripcion": "Venta de producto",
+  "fecha": "2025-05-23T12:00:00.000Z"
+}
+
+### Crear movimiento inválido (monto negativo)
+POST http://localhost:4000/api/movimientos
+Content-Type: application/json
+Authorization: Bearer <TOKEN>
+
+{
+  "tipo": "ingreso",
+  "monto": -100,
+  "categoria": "ventas"
+}

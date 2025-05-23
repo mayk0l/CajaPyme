@@ -23,3 +23,5 @@ export async function eliminarMovimientoApi(id: number): Promise<void> {
   // Suponiendo que hay un endpoint DELETE /movimientos/:id
   await axiosClient.delete(`/movimientos/${id}`);
 }
+
+export type { Movimiento } from '../store/useStore';

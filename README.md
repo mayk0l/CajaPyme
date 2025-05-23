@@ -48,6 +48,144 @@ cajapyme/
 - UI responsive y moderna
 - API documentada
 
+## Ejemplos de uso de la API y validación
+
+### Registro de usuario (POST /api/auth/register)
+
+Payload válido:
+```json
+{
+  "nombre": "Admin Test",
+  "email": "admin@cajapyme.cl",
+  "password": "admin1234",
+  "rol": "admin"
+}
+```
+Respuesta:
+```json
+{
+  "id": 2,
+  "nombre": "Admin Test",
+  "email": "admin@cajapyme.cl",
+  "rol": "admin"
+}
+```
+
+Payload inválido (email mal formado):
+```json
+{
+  "nombre": "Test",
+  "email": "no-es-email",
+  "password": "123456"
+}
+```
+Respuesta:
+```json
+{
+  "message": "Datos inválidos",
+  "errors": {
+    "formErrors": [],
+    "fieldErrors": { "email": ["Invalid email"] }
+  }
+}
+```
+
+### Login (POST /api/auth/login)
+
+Payload válido:
+```json
+{
+  "email": "admin@cajapyme.cl",
+  "password": "admin1234"
+}
+```
+Respuesta:
+```json
+{
+  "token": "<JWT>",
+  "user": { "id": 2, "nombre": "Admin Test", "email": "admin@cajapyme.cl", "rol": "admin" }
+}
+```
+
+### Crear movimiento (POST /api/movimientos)
+
+Headers:
+```
+Authorization: Bearer <JWT>
+Content-Type: application/json
+```
+Payload válido:
+```json
+{
+  "tipo": "ingreso",
+  "monto": 10000,
+  "categoria": "ventas",
+  "descripcion": "Venta de producto",
+  "fecha": "2025-05-23T12:00:00.000Z"
+}
+```
+Respuesta:
+```json
+{
+  "id": 12,
+  "tipo": "ingreso",
+  "monto": 10000,
+  "categoria": "ventas",
+  "descripcion": "Venta de producto",
+  "fecha": "2025-05-23T12:00:00.000Z",
+  "usuarioId": 2
+}
+```
+
+Payload inválido (monto negativo):
+```json
+{
+  "tipo": "ingreso",
+  "monto": -100,
+  "categoria": "ventas"
+}
+```
+Respuesta:
+```json
+{
+  "message": "Datos inválidos",
+  "errors": {
+    "formErrors": [],
+    "fieldErrors": { "monto": ["Number must be greater than 0"] }
+  }
+}
+```
+
+---
+
+La API valida todos los datos de entrada usando [Zod](https://zod.dev/) y retorna errores claros y estructurados. Esto asegura robustez y seguridad en el backend.
+
+## Rutas protegidas por rol (admin)
+
+Ejemplo: solo administradores pueden listar usuarios
+
+```
+GET /api/admin/usuarios
+Authorization: Bearer <JWT de admin>
+```
+
+Respuesta:
+```json
+[
+  { "id": 1, "nombre": "Admin", "email": "admin@cajapyme.cl", "rol": "admin" },
+  { "id": 2, "nombre": "Cajero", "email": "cajero@cajapyme.cl", "rol": "cajero" }
+]
+```
+
+Si el usuario no es admin:
+```json
+{
+  "message": "Acceso denegado: se requiere rol 'admin'"
+}
+```
+
+---
+
 ## Licencia
 
 MIT

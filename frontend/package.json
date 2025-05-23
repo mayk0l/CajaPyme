@@ -18,8 +18,10 @@
     "jspdf-autotable": "^5.0.2",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-hot-toast": "^2.5.2",
     "react-router-dom": "^7.6.0",
     "uuid": "^11.1.0",
+    "zod": "^3.25.23",
     "zustand": "^5.0.5"
   },
   "devDependencies": {

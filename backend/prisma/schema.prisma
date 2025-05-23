@@ -1,6 +1,3 @@
-// Prisma schema for CajaPyme
-// Guarda este archivo como schema.prisma en la raíz de backend/prisma/
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,22 +8,22 @@ datasource db {
 }
 
 model Usuario {
-  id        Int      @id @default(autoincrement())
-  nombre    String
-  email     String   @unique
-  password  String
-  rol       String   @default("cajero") // "admin" o "cajero"
-  creadoEn  DateTime @default(now())
+  id          Int          @id @default(autoincrement())
+  nombre      String
+  email       String       @unique
+  password    String
+  rol         String       @default("cajero")
+  creadoEn    DateTime     @default(now())
   movimientos Movimiento[]
 }
 
 model Movimiento {
   id          Int      @id @default(autoincrement())
-  tipo        String   // "ingreso" o "egreso"
+  tipo        String
   monto       Float
   categoria   String
   descripcion String?
   fecha       DateTime @default(now())
   usuarioId   Int
-  usuario     Usuario  @relation(fields: [usuarioId], references: [id])
+  usuario     Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
 }

@@ -5,6 +5,7 @@ import { useConfigStore } from '../store/configStore';
 export const Configuracion = () => {
   const { usuario, logout } = useAuthStore();
   const configStore = useConfigStore();
+  const rol = useAuthStore((state) => state.rol);
   
   // Estado local para la configuración
   const [nombreEmpresa, setNombreEmpresa] = useState(configStore.nombreEmpresa || 'CajaPyme');
@@ -68,7 +69,7 @@ export const Configuracion = () => {
               </div>
               <div className="text-center">
                 <p className="font-medium text-gray-800 mb-1">{usuario}</p>
-                <p className="text-sm text-gray-500">Administrador</p>
+                <p className="text-sm text-gray-500">{rol === 'admin' ? 'Administrador' : rol === 'cajero' ? 'Cajero' : 'Usuario'}</p>
               </div>
             </div>
             

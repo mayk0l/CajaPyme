@@ -3,16 +3,28 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from './routes/auth.routes';
 import movimientosRoutes from './routes/movimientos.routes';
+import adminRoutes from './routes/admin.routes';
 import { authMiddleware } from './middlewares/authMiddleware';
 
 dotenv.config();
 const app = express();
 
-app.use(cors());
+// Configuración avanzada de CORS para permitir credenciales y orígenes específicos
+app.use(cors({
+  origin: [
+    'http://localhost:5173', // Vite dev
+    'http://localhost:3000', // React dev
+    'http://localhost:4000', // API local (si accedes desde otra app)
+    'https://cajapyme.vercel.app' // Producción (ajusta según tu dominio)
+  ],
+  credentials: true,
+}));
+
 app.use(express.json());
 
 app.use('/api/auth', authRoutes);
 app.use('/api/movimientos', movimientosRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Ejemplo de ruta protegida
 type UserPayload = { id: number; email: string; rol: string };
@@ -22,4 +34,8 @@ app.get('/api/protegido', authMiddleware, (req, res) => {
 });
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 4000;
-app.listen(PORT, () => console.log(`API corriendo en puerto ${PORT}`));
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => console.log(`API corriendo en puerto ${PORT}`));
+}
+
+export default app;

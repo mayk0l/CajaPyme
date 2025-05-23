@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import useAuthStore from '../store/authStore';
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -9,6 +10,7 @@ interface MainLayoutProps {
 export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const location = useLocation();
   const [navOpen, setNavOpen] = useState(false);
+  const rol = useAuthStore((state) => state.rol);
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
       <header className="bg-gradient-to-r from-blue-800 to-blue-600 text-white shadow-lg">
@@ -71,6 +73,21 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
               </svg>
               Configuración
             </Link>
+            {rol === 'admin' && (
+              <Link
+                to="/admin/usuarios"
+                className={`flex items-center px-4 py-2 rounded-md transition-all font-medium text-sm gap-2 ${
+                  location.pathname.startsWith('/admin/usuarios') 
+                    ? 'bg-white text-blue-700 shadow-md' 
+                    : 'hover:bg-blue-700 text-white'
+                }`}
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6 3.87V4a4 4 0 10-8 0v16m8 0a4 4 0 01-8 0" />
+                </svg>
+                Usuarios
+              </Link>
+            )}
           </nav>
         </div>
         {/* Navegación móvil */}
@@ -109,6 +126,22 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
             >
               Configuración
             </Link>
+            {rol === 'admin' && (
+              <Link
+                to="/admin/usuarios"
+                className={`flex items-center px-4 py-2 rounded-md transition-all font-medium text-sm gap-2 ${
+                  location.pathname.startsWith('/admin/usuarios') 
+                    ? 'bg-white text-blue-700 shadow-md' 
+                    : 'hover:bg-blue-800 text-white'
+                }`}
+                onClick={() => setNavOpen(false)}
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6 3.87V4a4 4 0 10-8 0v16m8 0a4 4 0 01-8 0" />
+                </svg>
+                Usuarios
+              </Link>
+            )}
           </nav>
         )}
       </header>
