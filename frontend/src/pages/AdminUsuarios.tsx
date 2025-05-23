@@ -1,93 +1,24 @@
-import React, { useEffect, useState } from 'react';
-import axiosClient from '../api/axiosClient';
-import toast, { Toaster } from 'react-hot-toast';
+import React, { useState } from 'react';
 import { Helmet } from 'react-helmet';
-
-interface Usuario {
-  id: string; // UUID string, no number
-  nombre: string;
-  email: string;
-  rol: string;
-}
+import { useUsuarios } from '../hooks/useUsuarios';
+import { Toaster } from 'react-hot-toast';
+import type { Usuario } from '../hooks/useUsuarios';
 
 const AdminUsuarios: React.FC = () => {
-  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const {
+    usuarios,
+    loading,
+    error,
+    eliminandoId,
+    crearUsuario,
+    editarUsuario,
+    eliminarUsuario
+  } = useUsuarios();
+
   const [nuevoUsuario, setNuevoUsuario] = useState({ nombre: '', email: '', password: '', rol: 'cajero' });
   const [editandoId, setEditandoId] = useState<string | null>(null);
   const [editUsuario, setEditUsuario] = useState({ nombre: '', email: '', rol: 'cajero' });
   const [formError, setFormError] = useState('');
-  const [eliminandoId, setEliminandoId] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchUsuarios = async () => {
-      try {
-        setLoading(true);
-        setError('');
-        const res = await axiosClient.get<Usuario[]>('/admin/usuarios');
-        setUsuarios(res.data);
-      } catch {
-        setError('No se pudieron cargar los usuarios.');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchUsuarios();
-  }, []);
-
-  // Crear usuario
-  const crearUsuario = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setFormError('');
-    const v = validarNuevoUsuario();
-    if (v) { setFormError(v); return; }
-    try {
-      const res = await axiosClient.post<Usuario>('/auth/register', nuevoUsuario);
-      setUsuarios((prev) => [...prev, res.data]);
-      setNuevoUsuario({ nombre: '', email: '', password: '', rol: 'cajero' });
-      toast.success('Usuario creado correctamente');
-    } catch {
-      setFormError('Error al crear usuario');
-      toast.error('Error al crear usuario');
-    }
-  };
-  // Editar usuario
-  const iniciarEdicion = (u: Usuario) => {
-    setEditandoId(u.id);
-    setEditUsuario({ nombre: u.nombre, email: u.email, rol: u.rol });
-  };
-  const guardarEdicion = async (id: string) => {
-    setFormError('');
-    const v = validarEditUsuario();
-    if (v) { setFormError(v); return; }
-    try {
-      const res = await axiosClient.put<Usuario>(`/admin/usuarios/${id}`, editUsuario);
-      setUsuarios((prev) => prev.map((u) => (u.id === id ? res.data : u)));
-      setEditandoId(null);
-      toast.success('Usuario editado correctamente');
-    } catch {
-      setFormError('Error al editar usuario');
-      toast.error('Error al editar usuario');
-    }
-  };
-  const cancelarEdicion = () => setEditandoId(null);
-  const eliminarUsuario = async (id: string) => {
-    if (!window.confirm('¿Seguro que deseas eliminar este usuario?')) return;
-    setEliminandoId(id);
-    setFormError('');
-    try {
-      await axiosClient.delete(`/admin/usuarios/${id}`);
-      setUsuarios((prev) => prev.filter((u) => u.id !== id));
-      if (editandoId === id) setEditandoId(null);
-      toast.success('Usuario eliminado correctamente');
-    } catch {
-      setFormError('Error al eliminar usuario');
-      toast.error('Error al eliminar usuario');
-    } finally {
-      setEliminandoId(null);
-    }
-  };
 
   // Validaciones adicionales para crear usuario
   const validarNuevoUsuario = () => {
@@ -102,6 +33,49 @@ const AdminUsuarios: React.FC = () => {
     if (!editUsuario.nombre.trim()) return 'El nombre es obligatorio';
     if (!editUsuario.email.match(/^[^@\s]+@[^@\s]+\.[^@\s]+$/)) return 'Email inválido';
     return '';
+  };
+
+  // Crear usuario
+  const handleCrearUsuario = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormError('');
+    const v = validarNuevoUsuario();
+    if (v) { setFormError(v); return; }
+    try {
+      await crearUsuario(nuevoUsuario);
+      setNuevoUsuario({ nombre: '', email: '', password: '', rol: 'cajero' });
+    } catch {
+      setFormError('Error al crear usuario');
+    }
+  };
+
+  // Editar usuario
+  const iniciarEdicion = (u: Usuario) => {
+    setEditandoId(u.id);
+    setEditUsuario({ nombre: u.nombre, email: u.email, rol: u.rol });
+  };
+  const guardarEdicion = async (id: string) => {
+    setFormError('');
+    const v = validarEditUsuario();
+    if (v) { setFormError(v); return; }
+    try {
+      await editarUsuario(id, editUsuario);
+      setEditandoId(null);
+    } catch {
+      setFormError('Error al editar usuario');
+    }
+  };
+  const cancelarEdicion = () => setEditandoId(null);
+
+  // Eliminar usuario (con confirmación)
+  const handleEliminarUsuario = async (id: string) => {
+    if (!window.confirm('¿Seguro que deseas eliminar este usuario?')) return;
+    try {
+      await eliminarUsuario(id);
+      if (editandoId === id) setEditandoId(null);
+    } catch {
+      setFormError('Error al eliminar usuario');
+    }
   };
 
   return (
@@ -136,7 +110,7 @@ const AdminUsuarios: React.FC = () => {
             <div className="text-red-600 text-center py-4 font-semibold">{error}</div>
           ) : (
             <>
-              <form className="mb-6" onSubmit={crearUsuario}>
+              <form className="mb-6" onSubmit={handleCrearUsuario}>
                 <h2 className="font-semibold text-blue-700 mb-2">Crear nuevo usuario</h2>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-2 mb-2">
                   <input type="text" required placeholder="Nombre" className="border rounded px-2 py-1" value={nuevoUsuario.nombre} onChange={e => setNuevoUsuario({ ...nuevoUsuario, nombre: e.target.value })} />
@@ -190,7 +164,7 @@ const AdminUsuarios: React.FC = () => {
                             <td className="py-2 px-3 capitalize">{u.rol}</td>
                             <td className="py-2 px-3 flex gap-2">
                               <button className="bg-yellow-500 text-white px-2 py-1 rounded" onClick={() => iniciarEdicion(u)}>Editar</button>
-                              <button className="bg-red-600 text-white px-2 py-1 rounded flex items-center justify-center min-w-[80px]" onClick={() => eliminarUsuario(u.id)} disabled={eliminandoId === u.id}>
+                              <button className="bg-red-600 text-white px-2 py-1 rounded flex items-center justify-center min-w-[80px]" onClick={() => handleEliminarUsuario(u.id)} disabled={eliminandoId === u.id}>
                                 {eliminandoId === u.id ? (
                                   <svg className="animate-spin h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="10" strokeWidth="4" className="opacity-25" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" /></svg>
                                 ) : null}

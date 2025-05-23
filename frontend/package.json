@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "jest --env=jsdom --passWithNoTests"
   },
   "dependencies": {
     "@types/react-router-dom": "^5.3.3",
@@ -27,21 +28,26 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.25.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
     "@types/axios": "^0.9.36",
     "@types/file-saver": "^2.0.7",
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
     "@types/react-helmet": "^6.1.11",
     "@vitejs/plugin-react-swc": "^3.9.0",
+    "@vitest/ui": "^3.1.4",
     "autoprefixer": "^10.4.21",
     "eslint": "^9.25.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.19",
     "globals": "^16.0.0",
+    "jsdom": "^26.1.0",
     "postcss": "^8.5.3",
     "tailwindcss": "^3.3.2",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.30.1",
-    "vite": "^6.3.5"
+    "vite": "^6.3.5",
+    "vitest": "^3.1.4"
   }
 }
