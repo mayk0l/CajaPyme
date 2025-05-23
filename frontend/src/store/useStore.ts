@@ -1,13 +1,13 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { v4 as uuidv4 } from 'uuid';
 
 export type Movimiento = {
-  id: string;
+  id: number; // Cambiado a number para coincidir con backend/API
   tipo: 'ingreso' | 'egreso';
   monto: number;
   descripcion: string;
   fecha: string; // ISO string
+  categoria: string; // Añadido para reflejar el backend y evitar uso de any
 };
 
 interface CajaState {
@@ -18,8 +18,8 @@ interface CajaState {
   isLoading: boolean;
   agregarIngreso: (monto: number, descripcion: string, fecha?: string) => void;
   agregarEgreso: (monto: number, descripcion: string, fecha?: string) => void;
-  eliminarMovimiento: (id: string) => void;
-  editarMovimiento: (id: string, cambios: Partial<Movimiento>) => void;
+  eliminarMovimiento: (id: number) => void;
+  editarMovimiento: (id: number, cambios: Partial<Movimiento>) => void;
   setMovimientos: (movs: Movimiento[]) => void;
   setLoading: (loading: boolean) => void;
   reset: () => void;
@@ -39,11 +39,12 @@ export const useCajaStore = create<CajaState>()(
           saldo: state.saldo + monto,
           movimientos: [
             {
-              id: uuidv4(),
+              id: Date.now(), // id temporal local, backend asigna el real
               tipo: 'ingreso',
               monto,
               descripcion,
               fecha: fecha || new Date().toISOString(),
+              categoria: '', // Campo añadido
             },
             ...state.movimientos,
           ],
@@ -54,11 +55,12 @@ export const useCajaStore = create<CajaState>()(
           saldo: state.saldo - monto,
           movimientos: [
             {
-              id: uuidv4(),
+              id: Date.now(),
               tipo: 'egreso',
               monto,
               descripcion,
               fecha: fecha || new Date().toISOString(),
+              categoria: '', // Campo añadido
             },
             ...state.movimientos,
           ],
