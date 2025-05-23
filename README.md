@@ -186,6 +186,93 @@ Si el usuario no es admin:
 
 ---
 
+## CRUD de usuarios (solo admin)
+
+### Listar usuarios
+
+```
+GET /api/admin/usuarios
+Authorization: Bearer <JWT de admin>
+```
+Respuesta:
+```json
+[
+  { "id": 1, "nombre": "Admin", "email": "admin@cajapyme.cl", "rol": "admin" },
+  { "id": 2, "nombre": "Cajero", "email": "cajero@cajapyme.cl", "rol": "cajero" }
+]
+```
+
+### Crear usuario
+
+```
+POST /api/auth/register
+Content-Type: application/json
+```
+Payload:
+```json
+{
+  "nombre": "Nuevo Usuario",
+  "email": "nuevo@cajapyme.cl",
+  "password": "123456",
+  "rol": "cajero"
+}
+```
+Respuesta:
+```json
+{
+  "id": 3,
+  "nombre": "Nuevo Usuario",
+  "email": "nuevo@cajapyme.cl",
+  "rol": "cajero"
+}
+```
+
+### Editar usuario
+
+```
+PUT /api/admin/usuarios/:id
+Authorization: Bearer <JWT de admin>
+Content-Type: application/json
+```
+Payload:
+```json
+{
+  "nombre": "Usuario Editado",
+  "email": "editado@cajapyme.cl",
+  "rol": "admin"
+}
+```
+Respuesta:
+```json
+{
+  "id": 3,
+  "nombre": "Usuario Editado",
+  "email": "editado@cajapyme.cl",
+  "rol": "admin"
+}
+```
+
+### Eliminar usuario
+
+```
+DELETE /api/admin/usuarios/:id
+Authorization: Bearer <JWT de admin>
+```
+Respuesta:
+```json
+{
+  "message": "Usuario eliminado",
+  "usuario": { "id": 3, "nombre": "Usuario Editado", "email": "editado@cajapyme.cl", "rol": "admin" }
+}
+```
+
+Notas:
+- Solo un admin puede acceder a estas rutas.
+- No es posible eliminar el usuario propio (el backend lo previene).
+- Todos los endpoints retornan errores claros y estructurados.
+
+---
+
 ## Licencia
 
 MIT

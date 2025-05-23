@@ -169,7 +169,7 @@ export const Dashboard = () => {
               <p className="text-sm text-gray-600 mb-1">Total de movimientos</p>
               <div className="flex items-center">
                 <div className="flex-1 h-4 bg-gray-200 rounded-full overflow-hidden">
-                  <div className="h-full bg-blue-600 rounded-full" style={{ width: '100%' }}></div>
+                  <div className="h-full bg-blue-600 rounded-full" style={{ width: totalMovimientos > 0 ? '100%' : '0%' }}></div>
                 </div>
                 <span className="ml-2 text-sm font-medium text-gray-700">{totalMovimientos}</span>
               </div>
