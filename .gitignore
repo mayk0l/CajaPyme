@@ -1,0 +1,42 @@
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+dist/
+build/
+.env
+.env.*.local
+
+# Logs
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor/IDE
+.vscode/
+.idea/
+*.swp
+
+# Coverage
+coverage/
+*.lcov
+
+# Prisma
+prisma/dev.db
+prisma/dev.db-journal
+
+# Frontend build
+frontend/.next/
+frontend/out/
+frontend/.cache/
+frontend/.turbo/
+
+# Backend build
+backend/dist/
+backend/.env
+backend/.env.local
