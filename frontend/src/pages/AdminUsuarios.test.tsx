@@ -1,8 +1,11 @@
+// @vitest-environment jsdom
+
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import AdminUsuarios from './AdminUsuarios';
 import '@testing-library/jest-dom';
 import { vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 
 // Mock useUsuarios to control data and loading state
 vi.mock('../hooks/useUsuarios', () => ({

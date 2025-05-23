@@ -10,7 +10,6 @@ export function useMovimientosCaja() {
 
   useEffect(() => {
     fetchMovimientos();
-    // eslint-disable-next-line
   }, []);
 
   const fetchMovimientos = async () => {

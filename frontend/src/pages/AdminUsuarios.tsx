@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Helmet } from 'react-helmet';
 import { useUsuarios } from '../hooks/useUsuarios';
-import { Toaster } from 'react-hot-toast';
 import type { Usuario } from '../hooks/useUsuarios';
+import { Formik, Form, Field, ErrorMessage } from 'formik';
+import * as Yup from 'yup';
 
 const AdminUsuarios: React.FC = () => {
   const {
@@ -15,39 +16,15 @@ const AdminUsuarios: React.FC = () => {
     eliminarUsuario
   } = useUsuarios();
 
-  const [nuevoUsuario, setNuevoUsuario] = useState({ nombre: '', email: '', password: '', rol: 'cajero' });
   const [editandoId, setEditandoId] = useState<string | null>(null);
   const [editUsuario, setEditUsuario] = useState({ nombre: '', email: '', rol: 'cajero' });
-  const [formError, setFormError] = useState('');
 
-  // Validaciones adicionales para crear usuario
-  const validarNuevoUsuario = () => {
-    if (!nuevoUsuario.nombre.trim()) return 'El nombre es obligatorio';
-    if (!nuevoUsuario.email.match(/^[^@\s]+@[^@\s]+\.[^@\s]+$/)) return 'Email inválido';
-    if (nuevoUsuario.password.length < 6) return 'La contraseña debe tener al menos 6 caracteres';
-    return '';
-  };
-
-  // Validaciones adicionales para editar usuario
-  const validarEditUsuario = () => {
-    if (!editUsuario.nombre.trim()) return 'El nombre es obligatorio';
-    if (!editUsuario.email.match(/^[^@\s]+@[^@\s]+\.[^@\s]+$/)) return 'Email inválido';
-    return '';
-  };
-
-  // Crear usuario
-  const handleCrearUsuario = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setFormError('');
-    const v = validarNuevoUsuario();
-    if (v) { setFormError(v); return; }
-    try {
-      await crearUsuario(nuevoUsuario);
-      setNuevoUsuario({ nombre: '', email: '', password: '', rol: 'cajero' });
-    } catch {
-      setFormError('Error al crear usuario');
-    }
-  };
+  const usuarioSchema = Yup.object().shape({
+    nombre: Yup.string().required('El nombre es obligatorio'),
+    email: Yup.string().email('Email inválido').required('El email es obligatorio'),
+    password: Yup.string().min(6, 'La contraseña debe tener al menos 6 caracteres').required('La contraseña es obligatoria'),
+    rol: Yup.string().oneOf(['cajero', 'admin']).required('El rol es obligatorio'),
+  });
 
   // Editar usuario
   const iniciarEdicion = (u: Usuario) => {
@@ -55,14 +32,11 @@ const AdminUsuarios: React.FC = () => {
     setEditUsuario({ nombre: u.nombre, email: u.email, rol: u.rol });
   };
   const guardarEdicion = async (id: string) => {
-    setFormError('');
-    const v = validarEditUsuario();
-    if (v) { setFormError(v); return; }
     try {
       await editarUsuario(id, editUsuario);
       setEditandoId(null);
     } catch {
-      setFormError('Error al editar usuario');
+      // Manejo de error si es necesario
     }
   };
   const cancelarEdicion = () => setEditandoId(null);
@@ -74,7 +48,7 @@ const AdminUsuarios: React.FC = () => {
       await eliminarUsuario(id);
       if (editandoId === id) setEditandoId(null);
     } catch {
-      setFormError('Error al eliminar usuario');
+      // Manejo de error si es necesario
     }
   };
 
@@ -110,22 +84,53 @@ const AdminUsuarios: React.FC = () => {
             <div className="text-red-600 text-center py-4 font-semibold">{error}</div>
           ) : (
             <>
-              <form className="mb-6" onSubmit={handleCrearUsuario}>
-                <h2 className="font-semibold text-blue-700 mb-2">Crear nuevo usuario</h2>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-2 mb-2">
-                  <input type="text" required placeholder="Nombre" className="border rounded px-2 py-1" value={nuevoUsuario.nombre} onChange={e => setNuevoUsuario({ ...nuevoUsuario, nombre: e.target.value })} />
-                  <input type="email" required placeholder="Email" className="border rounded px-2 py-1" value={nuevoUsuario.email} onChange={e => setNuevoUsuario({ ...nuevoUsuario, email: e.target.value })} />
-                  <input type="password" required placeholder="Contraseña" className="border rounded px-2 py-1" value={nuevoUsuario.password} onChange={e => setNuevoUsuario({ ...nuevoUsuario, password: e.target.value })} />
-                  <select className="border rounded px-2 py-1" value={nuevoUsuario.rol} onChange={e => setNuevoUsuario({ ...nuevoUsuario, rol: e.target.value })}>
-                    <option value="cajero">Cajero</option>
-                    <option value="admin">Administrador</option>
-                  </select>
-                </div>
-                {formError && <div className="text-red-600 text-sm mb-2">{formError}</div>}
-                <button type="submit" className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700 flex items-center min-w-[90px]">
-                  Crear
-                </button>
-              </form>
+              {/* Formulario con Formik */}
+              <Formik
+                initialValues={{ nombre: '', email: '', password: '', rol: 'cajero' }}
+                validationSchema={usuarioSchema}
+                onSubmit={async (values, { resetForm, setSubmitting, setStatus }) => {
+                  setStatus('');
+                  try {
+                    await crearUsuario(values);
+                    resetForm();
+                  } catch {
+                    setStatus('Error al crear usuario');
+                  } finally {
+                    setSubmitting(false);
+                  }
+                }}
+              >
+                {({ isSubmitting, status }) => (
+                  <Form className="mb-6">
+                    <h2 className="font-semibold text-blue-700 mb-2">Crear nuevo usuario</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-2 mb-2">
+                      <div>
+                        <Field name="nombre" type="text" placeholder="Nombre" className="border rounded px-2 py-1 w-full" />
+                        <ErrorMessage name="nombre" component="div" className="text-red-600 text-xs" />
+                      </div>
+                      <div>
+                        <Field name="email" type="email" placeholder="Email" className="border rounded px-2 py-1 w-full" />
+                        <ErrorMessage name="email" component="div" className="text-red-600 text-xs" />
+                      </div>
+                      <div>
+                        <Field name="password" type="password" placeholder="Contraseña" className="border rounded px-2 py-1 w-full" />
+                        <ErrorMessage name="password" component="div" className="text-red-600 text-xs" />
+                      </div>
+                      <div>
+                        <Field as="select" name="rol" className="border rounded px-2 py-1 w-full">
+                          <option value="cajero">Cajero</option>
+                          <option value="admin">Administrador</option>
+                        </Field>
+                        <ErrorMessage name="rol" component="div" className="text-red-600 text-xs" />
+                      </div>
+                    </div>
+                    {status && <div className="text-red-600 text-sm mb-2">{status}</div>}
+                    <button type="submit" disabled={isSubmitting} className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700 flex items-center min-w-[90px]">
+                      {isSubmitting ? 'Creando...' : 'Crear'}
+                    </button>
+                  </Form>
+                )}
+              </Formik>
               {/* Tabla de usuarios */}
               <div className="overflow-x-auto rounded-lg border border-gray-200 mt-2">
                 <table className="w-full text-sm min-w-[600px]">
@@ -181,7 +186,7 @@ const AdminUsuarios: React.FC = () => {
             </>
           )}
         </div>
-        <Toaster position="top-right" />
+        {/* <Toaster position="top-right" /> */}
       </div>
     </>
   );
