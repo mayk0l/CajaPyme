@@ -15,7 +15,8 @@ app.use(cors({
     'http://localhost:5173', // Vite dev
     'http://localhost:3000', // React dev
     'http://localhost:4000', // API local (si accedes desde otra app)
-    'https://cajapyme.vercel.app' // Producción (ajusta según tu dominio)
+    'https://cajapyme.vercel.app', // Producción (ajusta según tu dominio)
+    'https://cajapyme-frontend.vercel.app' // Dominio de Vercel (ajusta si tu frontend tiene otro subdominio)
   ],
   credentials: true,
 }));
