@@ -17,7 +17,6 @@ export function useUsuarios() {
 
   useEffect(() => {
     fetchUsuarios();
-    // eslint-disable-next-line
   }, []);
 
   const fetchUsuarios = async () => {

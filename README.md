@@ -1,10 +1,17 @@
 # CajaPyme
 
-**CajaPyme** es una plataforma web fullstack para la gestión de caja diaria y reportes financieros de PYMEs chilenas.
+**CajaPyme** es una plataforma web open source para la gestión de caja diaria, ingresos, egresos y reportes financieros de PYMEs chilenas.  
+Desarrollada con un stack moderno y buenas prácticas, pensada para ser fácil de usar, auditable y extensible.
 
 ---
 
-## Estructura del proyecto
+## 🚀 Demo en producción
+
+[https://caja-pyme.vercel.app/](https://caja-pyme.vercel.app/)
+
+---
+
+## 🏗️ Estructura del proyecto
 
 ```
 cajapyme/
@@ -14,265 +21,90 @@ cajapyme/
 └── README.md
 ```
 
-## Requisitos
+---
 
-- Node.js >= 18.x
-- PostgreSQL >= 14.x
-- npm
-
-## Instalación y uso
-
-```zsh
-# Clona el repositorio
- git clone https://github.com/tuusuario/cajapyme.git
- cd cajapyme
-
-# Backend
- cd backend
- cp .env.example .env
- npm install
- npx prisma migrate dev
- npm run dev
-
-# Frontend
- cd ../frontend
- npm install
- npm run dev
-```
-
-## Funcionalidades principales
+## ✨ Funcionalidades principales
 
 - Registro y login seguro (JWT)
-- Gestión de ingresos y egresos
-- Reportes diarios y mensuales
-- UI responsive y moderna
-- API documentada
+- Gestión de ingresos y egresos diarios
+- Reportes diarios y mensuales exportables (CSV, PDF, Word)
+- UI responsive y moderna (mobile first)
+- Administración de usuarios y roles (admin/cajero)
+- API documentada y validada con Zod
+- Filtros avanzados y paginación en historial de movimientos
 
-## Ejemplos de uso de la API y validación
+---
 
-### Registro de usuario (POST /api/auth/register)
+## ⚙️ Stack Tecnológico
 
-Payload válido:
-```json
-{
-  "nombre": "Admin Test",
-  "email": "admin@cajapyme.cl",
-  "password": "admin1234",
-  "rol": "admin"
-}
-```
-Respuesta:
-```json
-{
-  "id": 2,
-  "nombre": "Admin Test",
-  "email": "admin@cajapyme.cl",
-  "rol": "admin"
-}
-```
+- **Frontend:** React + Vite + TypeScript + Zustand + TailwindCSS + React Router
+- **Backend:** Node.js + Express + TypeScript + Prisma ORM + PostgreSQL + JWT + Zod
+- **Testing:** Vitest + Testing Library
+- **DevOps:** GitHub Actions, Vercel (frontend), Railway (backend/db)
 
-Payload inválido (email mal formado):
-```json
-{
-  "nombre": "Test",
-  "email": "no-es-email",
-  "password": "123456"
-}
-```
-Respuesta:
-```json
-{
-  "message": "Datos inválidos",
-  "errors": {
-    "formErrors": [],
-    "fieldErrors": { "email": ["Invalid email"] }
-  }
-}
-```
+---
 
-### Login (POST /api/auth/login)
+## 🛠️ Instalación y uso local
 
-Payload válido:
-```json
-{
-  "email": "admin@cajapyme.cl",
-  "password": "admin1234"
-}
-```
-Respuesta:
-```json
-{
-  "token": "<JWT>",
-  "user": { "id": 2, "nombre": "Admin Test", "email": "admin@cajapyme.cl", "rol": "admin" }
-}
-```
+```sh
+# Clona el repositorio
+git clone https://github.com/tuusuario/cajapyme.git
+cd cajapyme
 
-### Crear movimiento (POST /api/movimientos)
+# Backend
+cd backend
+cp .env.example .env
+npm install
+npx prisma migrate dev
+npm run dev
 
-Headers:
-```
-Authorization: Bearer <JWT>
-Content-Type: application/json
-```
-Payload válido:
-```json
-{
-  "tipo": "ingreso",
-  "monto": 10000,
-  "categoria": "ventas",
-  "descripcion": "Venta de producto",
-  "fecha": "2025-05-23T12:00:00.000Z"
-}
-```
-Respuesta:
-```json
-{
-  "id": 12,
-  "tipo": "ingreso",
-  "monto": 10000,
-  "categoria": "ventas",
-  "descripcion": "Venta de producto",
-  "fecha": "2025-05-23T12:00:00.000Z",
-  "usuarioId": 2
-}
-```
-
-Payload inválido (monto negativo):
-```json
-{
-  "tipo": "ingreso",
-  "monto": -100,
-  "categoria": "ventas"
-}
-```
-Respuesta:
-```json
-{
-  "message": "Datos inválidos",
-  "errors": {
-    "formErrors": [],
-    "fieldErrors": { "monto": ["Number must be greater than 0"] }
-  }
-}
+# Frontend
+cd ../frontend
+npm install
+npm run dev
 ```
 
 ---
 
-La API valida todos los datos de entrada usando [Zod](https://zod.dev/) y retorna errores claros y estructurados. Esto asegura robustez y seguridad en el backend.
+## 📚 Documentación
 
-## Rutas protegidas por rol (admin)
-
-Ejemplo: solo administradores pueden listar usuarios
-
-```
-GET /api/admin/usuarios
-Authorization: Bearer <JWT de admin>
-```
-
-Respuesta:
-```json
-[
-  { "id": 1, "nombre": "Admin", "email": "admin@cajapyme.cl", "rol": "admin" },
-  { "id": 2, "nombre": "Cajero", "email": "cajero@cajapyme.cl", "rol": "cajero" }
-]
-```
-
-Si el usuario no es admin:
-```json
-{
-  "message": "Acceso denegado: se requiere rol 'admin'"
-}
-```
+- [docs/ARQUITECTURA_SISTEMA.md](docs/ARQUITECTURA_SISTEMA.md): Arquitectura y decisiones técnicas
+- [docs/CASOS_DE_USO.md](docs/CASOS_DE_USO.md): Casos de uso principales
+- [docs/FLUJO_AUTENTICACION.md](docs/FLUJO_AUTENTICACION.md): Flujo de autenticación JWT
+- [docs/CHECKLIST_CRITERIOS_EXITO.md](docs/CHECKLIST_CRITERIOS_EXITO.md): Checklist de criterios de éxito
 
 ---
 
-## CRUD de usuarios (solo admin)
+## 🧩 Próximas integraciones y mejoras
 
-### Listar usuarios
-
-```
-GET /api/admin/usuarios
-Authorization: Bearer <JWT de admin>
-```
-Respuesta:
-```json
-[
-  { "id": 1, "nombre": "Admin", "email": "admin@cajapyme.cl", "rol": "admin" },
-  { "id": 2, "nombre": "Cajero", "email": "cajero@cajapyme.cl", "rol": "cajero" }
-]
-```
-
-### Crear usuario
-
-```
-POST /api/auth/register
-Content-Type: application/json
-```
-Payload:
-```json
-{
-  "nombre": "Nuevo Usuario",
-  "email": "nuevo@cajapyme.cl",
-  "password": "123456",
-  "rol": "cajero"
-}
-```
-Respuesta:
-```json
-{
-  "id": 3,
-  "nombre": "Nuevo Usuario",
-  "email": "nuevo@cajapyme.cl",
-  "rol": "cajero"
-}
-```
-
-### Editar usuario
-
-```
-PUT /api/admin/usuarios/:id
-Authorization: Bearer <JWT de admin>
-Content-Type: application/json
-```
-Payload:
-```json
-{
-  "nombre": "Usuario Editado",
-  "email": "editado@cajapyme.cl",
-  "rol": "admin"
-}
-```
-Respuesta:
-```json
-{
-  "id": 3,
-  "nombre": "Usuario Editado",
-  "email": "editado@cajapyme.cl",
-  "rol": "admin"
-}
-```
-
-### Eliminar usuario
-
-```
-DELETE /api/admin/usuarios/:id
-Authorization: Bearer <JWT de admin>
-```
-Respuesta:
-```json
-{
-  "message": "Usuario eliminado",
-  "usuario": { "id": 3, "nombre": "Usuario Editado", "email": "editado@cajapyme.cl", "rol": "admin" }
-}
-```
-
-Notas:
-- Solo un admin puede acceder a estas rutas.
-- No es posible eliminar el usuario propio (el backend lo previene).
-- Todos los endpoints retornan errores claros y estructurados.
+- [ ] Integrar TanStack Query para manejo eficiente de datos y sincronización frontend-backend.
+- [ ] Mejorar cobertura de tests unitarios y de integración.
+- [ ] Agregar internacionalización (i18n) para soporte multilenguaje.
+- [ ] Implementar notificaciones en tiempo real (WebSocket o similar).
+- [ ] Mejorar la documentación OpenAPI/Swagger del backend.
+- [ ] Agregar más reportes y visualizaciones gráficas.
+- [ ] Mejorar la experiencia móvil y accesibilidad (a11y).
+- [ ] Automatizar despliegues y CI/CD para ambos entornos.
+- [ ] Permitir configuración avanzada de roles y permisos.
+- [ ] Agregar soporte para multiempresa/multisucursal.
 
 ---
 
-## Licencia
+## 🧑‍💻 Contribuciones y feedback
 
-MIT
+¡Toda sugerencia, issue o PR es bienvenida!  
+Si tienes ideas, encuentras bugs o quieres aportar, abre un issue o un pull request.  
+Este proyecto busca ser útil para la comunidad de PYMEs y desarrolladores de Chile y Latinoamérica.
+
+---
+
+## 📢 Créditos y licencia
+
+Desarrollado por [@mayk0l](https://github.com/mayk0l) y comunidad.  
+Licencia MIT.
+
+---
+
+## 🌎 ¿Te sirvió?
+
+Si te ayudó, dale una estrella ⭐ en GitHub y compártelo con otros emprendedores o desarrolladores.
