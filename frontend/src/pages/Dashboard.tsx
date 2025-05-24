@@ -1,9 +1,11 @@
 import { useCajaStore } from '../store/useStore';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
+import { useTour } from '../hooks/useTour';
 
 export const Dashboard = () => {
   const { saldo, ingresos, egresos, movimientos } = useCajaStore();
+  const { startTour } = useTour();
   
   const formatoCLP = (valor: number) => valor.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', minimumFractionDigits: 0 });
   
@@ -36,7 +38,6 @@ export const Dashboard = () => {
         <meta property="og:url" content="https://caja-pyme.vercel.app/dashboard" />
         <meta property="og:site_name" content="CajaPyme" />
       </Helmet>
-      
       <div className="space-y-6 animate-fade-in">
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-2xl font-bold text-blue-800 flex items-center gap-2">
@@ -45,20 +46,31 @@ export const Dashboard = () => {
             </svg>
             Dashboard
           </h2>
-          <Link 
-            to="/caja" 
-            className="flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-800"
-          >
-            <span>Ir a Caja</span>
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-            </svg>
-          </Link>
+          <div className="flex gap-2 items-center">
+            <button
+              type="button"
+              className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-md text-sm font-medium border border-blue-200 hover:bg-blue-200 transition"
+              onClick={() => startTour('dashboard')}
+              aria-label="Mostrar guía interactiva"
+            >
+              ¿Cómo funciona?
+            </button>
+            <Link
+              to="/caja"
+              id="ir-a-caja"
+              className="flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-800"
+            >
+              <span>Ir a Caja</span>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+          </div>
         </div>
 
         {/* Tarjetas de resumen */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white rounded-xl shadow-md overflow-hidden border-l-4 border-blue-500 transition-all hover:shadow-lg">
+          <div id="saldo-actual" className="bg-white rounded-xl shadow-md overflow-hidden border-l-4 border-blue-500 transition-all hover:shadow-lg">
             <div className="p-5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center justify-center h-12 w-12 rounded-md bg-blue-100 text-blue-600">
@@ -74,7 +86,7 @@ export const Dashboard = () => {
             </div>
           </div>
           
-          <div className="bg-white rounded-xl shadow-md overflow-hidden border-l-4 border-green-500 transition-all hover:shadow-lg">
+          <div id="ingresos-totales" className="bg-white rounded-xl shadow-md overflow-hidden border-l-4 border-green-500 transition-all hover:shadow-lg">
             <div className="p-5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center justify-center h-12 w-12 rounded-md bg-green-100 text-green-600">
@@ -90,7 +102,7 @@ export const Dashboard = () => {
             </div>
           </div>
           
-          <div className="bg-white rounded-xl shadow-md overflow-hidden border-l-4 border-red-500 transition-all hover:shadow-lg">
+          <div id="egresos-totales" className="bg-white rounded-xl shadow-md overflow-hidden border-l-4 border-red-500 transition-all hover:shadow-lg">
             <div className="p-5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center justify-center h-12 w-12 rounded-md bg-red-100 text-red-600">
@@ -109,7 +121,7 @@ export const Dashboard = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
           {/* Últimos movimientos */}
-          <div className="bg-white rounded-xl shadow-md p-6">
+          <div id="ultimos-movimientos" className="bg-white rounded-xl shadow-md p-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
                 <svg className="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -169,7 +181,7 @@ export const Dashboard = () => {
           </div>
           
           {/* Estadísticas */}
-          <div className="bg-white rounded-xl shadow-md p-6">
+          <div id="resumen-actividad" className="bg-white rounded-xl shadow-md p-6">
             <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
               <svg className="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -228,6 +240,10 @@ export const Dashboard = () => {
           </div>
         </div>
       </div>
+      {/* Navbar principal */}
+      <nav id="navbar">
+        {/* ...aquí va la navegación existente... */}
+      </nav>
     </>
   );
 };

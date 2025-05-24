@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import useAuthStore from '../store/authStore';
+import { useTour } from '../hooks/useTour';
 
 export const Login = () => {
   const { login } = useAuthStore();
@@ -10,6 +11,7 @@ export const Login = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { startTour } = useTour();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,6 +51,17 @@ export const Login = () => {
             <h2 className="mt-6 text-3xl font-extrabold text-gray-900">CajaPyme</h2>
             <p className="mt-2 text-sm text-gray-600">Control de Caja Diaria para PYMEs</p>
           </div>
+          {/* Botón de ayuda para el tour */}
+          <div className="flex justify-end mb-2">
+            <button
+              type="button"
+              className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-md text-sm font-medium border border-blue-200 hover:bg-blue-200 transition"
+              onClick={() => startTour('login')}
+              aria-label="Mostrar guía interactiva"
+            >
+              ¿Cómo funciona?
+            </button>
+          </div>
           
           <div className="bg-white py-8 px-6 shadow rounded-2xl sm:px-10 border border-gray-200">
             <form className="space-y-6" onSubmit={handleSubmit}>
@@ -65,7 +78,7 @@ export const Login = () => {
                     </svg>
                   </div>
                   <input
-                    id="email"
+                    id="email-input"
                     name="email"
                     type="email"
                     autoComplete="email"
@@ -90,7 +103,7 @@ export const Login = () => {
                     </svg>
                   </div>
                   <input
-                    id="password"
+                    id="password-input"
                     name="password"
                     type="password"
                     autoComplete="current-password"
@@ -140,6 +153,7 @@ export const Login = () => {
 
               <div>
                 <button
+                  id="login-button"
                   type="submit"
                   disabled={loading}
                   className="group relative w-full flex justify-center py-3 px-4 border border-transparent rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 font-medium shadow-sm transition-colors duration-200"
@@ -158,7 +172,7 @@ export const Login = () => {
               </div>
             </form>
             
-            <div className="mt-6">
+            <div className="mt-6" id="demo-access">
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-gray-300"></div>

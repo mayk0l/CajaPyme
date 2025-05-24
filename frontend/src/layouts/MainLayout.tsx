@@ -32,7 +32,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
             </svg>
           </button>
           {/* Navegación desktop */}
-          <nav className="hidden md:flex gap-3 items-center">
+          <nav id="navbar" className="hidden md:flex gap-3 items-center">
             <Link
               to="/dashboard"
               className={`flex items-center px-4 py-2 rounded-md transition-all font-medium text-sm gap-2 ${

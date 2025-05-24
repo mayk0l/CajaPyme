@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useCajaStore } from '../store/useStore';
 import { useConfigStore } from '../store/configStore';
+import { useTour } from '../hooks/useTour';
 import type { Movimiento } from '../store/useStore';
 import { saveAs } from 'file-saver';
 import type { MovimientoInput } from '../api/movimientosApi';
@@ -13,6 +14,7 @@ type MovimientoId = number;
 export function CajaResumen() {
   const { saldo, ingresos, egresos, movimientos, isLoading, setLoading, setMovimientos, reset } = useCajaStore();
   const store = useConfigStore();
+  const { startTour } = useTour();
 
   // Estados para formularios y UI
   const [error, setError] = useState('');
@@ -462,23 +464,21 @@ export function CajaResumen() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6">
-      {isLoading && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-30">
-          <div className="bg-white p-6 rounded-lg shadow-lg flex flex-col items-center">
-            <div className="animate-spin w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full mb-4"></div>
-            <div className="text-gray-700 font-medium text-lg">Cargando...</div>
-          </div>
-        </div>
-      )}
-
-      {/* Título principal */}
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-blue-800 flex items-center gap-2">
+      <div className="flex justify-between items-center mb-8">
+        <h2 id="resumen-caja-diaria" className="text-2xl font-bold text-blue-800 flex items-center gap-2">
           <svg className="h-7 w-7 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 1.343-3 3s1.343 3 3 3 3-1.343 3-3-1.343-3-3-3zm0 0V3m0 18v-3" />
           </svg>
           Resumen Caja Diaria
         </h2>
+        <button
+          type="button"
+          className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-md text-sm font-medium border border-blue-200 hover:bg-blue-200 transition"
+          onClick={() => startTour('caja')}
+          aria-label="Mostrar guía interactiva"
+        >
+          ¿Cómo funciona?
+        </button>
       </div>
 
       {/* Tarjetas resumen */}
@@ -546,6 +546,7 @@ export function CajaResumen() {
                 <span className="text-gray-500 sm:text-sm">$</span>
               </div>
               <input
+                id="monto-input"
                 type="number"
                 min="0"
                 value={monto}
@@ -558,6 +559,7 @@ export function CajaResumen() {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
             <input
+              id="descripcion-input"
               type="text"
               value={descripcion}
               onChange={e => setDescripcion(e.target.value)}
@@ -568,6 +570,7 @@ export function CajaResumen() {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Categoría</label>
             <select
+              id="categoria-select"
               value={categoria}
               onChange={e => setCategoria(e.target.value)}
               className="block w-full px-3 py-2 rounded-md border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
@@ -581,6 +584,7 @@ export function CajaResumen() {
           </div>
           <div className="md:col-span-3 flex flex-wrap gap-3 mt-2">
             <button
+              id="btn-ingreso"
               type="button"
               onClick={() => handleRegistrarMovimiento('ingreso')}
               className="flex-1 md:flex-none bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-md font-medium flex items-center justify-center gap-2 transition-colors"
@@ -592,6 +596,7 @@ export function CajaResumen() {
               Ingreso
             </button>
             <button
+              id="btn-egreso"
               type="button"
               onClick={() => handleRegistrarMovimiento('egreso')}
               className="flex-1 md:flex-none bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-md font-medium flex items-center justify-center gap-2 transition-colors"
@@ -602,7 +607,8 @@ export function CajaResumen() {
               </svg>
               Egreso
             </button>
-            <button 
+            <button
+              id="btn-reiniciar"
               onClick={handleReset}
               className="flex-1 md:flex-none bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-2 rounded-md font-medium flex items-center justify-center gap-2 transition-colors ml-auto"
               type="button"
@@ -623,7 +629,7 @@ export function CajaResumen() {
 
       {/* Historial de movimientos */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        <div className="p-6 border-b border-gray-200">
+        <div id="historial-movimientos" className="p-6 border-b border-gray-200">
           <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
             <svg className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -633,7 +639,7 @@ export function CajaResumen() {
         </div>
 
         {/* Filtros */}
-        <div className="p-4 border-b border-gray-200 bg-gray-50">
+        <div id="filtros-historial" className="p-4 border-b border-gray-200 bg-gray-50">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             {/* Filtro por texto */}
             <div>
@@ -688,7 +694,7 @@ export function CajaResumen() {
           </div>
 
           {/* Exportación */}
-          <div className="flex flex-wrap items-center justify-between mt-5 pt-4 border-t border-gray-200">
+          <div className="flex flex-wrap items-center justify-between mt-5 pt-4 border-t border-gray-200" id="exportar-reportes">
             <div className="flex flex-wrap gap-3 text-sm mb-3 sm:mb-0">
               <span className="flex items-center">
                 <span className="text-gray-600">Ingresos:</span>
@@ -795,9 +801,9 @@ export function CajaResumen() {
                   <td className="px-4 py-3 text-sm text-gray-800 max-w-xs truncate">
                     {mov.descripcion}
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-center">
-                    <button 
-                      onClick={() => handleEliminarMovimiento(Number(mov.id), mov.descripcion)} 
+                  <td className="px-4 py-3 whitespace-nowrap text-center" id="acciones-movimientos">
+                    <button
+                      onClick={() => handleEliminarMovimiento(Number(mov.id), mov.descripcion)}
                       className="text-red-600 hover:text-red-900 text-sm font-medium"
                     >
                       Eliminar
