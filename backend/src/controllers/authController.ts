@@ -28,7 +28,8 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     }
     const { nombre, email, password, rol } = parsed.data;
 
-    // Solo permitir crear un admin si no existe ningún admin
+    // Solo permitir crear un admin si no existe ningún admin (solo para entorno demo o registro público)
+    // Elimina o comenta este bloque para producción si quieres permitir que admins creen otros admins desde el panel
     if ((rol === 'admin' || !rol) && (await prisma.usuario.count({ where: { rol: 'admin' } })) > 0) {
       res.status(403).json({ message: 'No está permitido registrar más administradores desde el registro público.' });
       return;
