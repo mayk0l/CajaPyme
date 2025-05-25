@@ -47,6 +47,13 @@ router.put('/usuarios/:id', authMiddleware, requireRole('admin'), (req, res) => 
     const { nombre, email, rol } = req.body;
     const idInt = parseInt(id, 10);
 
+    // Solo para la versión demo: proteger la cuenta admin@caja.cl para que no pueda ser editada
+    // BORRAR este bloque si pasa a producción real
+    const usuarioActual = await prisma.usuario.findUnique({ where: { id: idInt } });
+    if (usuarioActual && usuarioActual.email === 'admin@caja.cl') {
+      return res.status(403).json({ message: 'No está permitido editar la cuenta admin@caja.cl en la versión demo.' });
+    }
+
     if (!nombre || !email || !rol) {
       return res.status(400).json({ message: 'Faltan datos obligatorios' });
     }
