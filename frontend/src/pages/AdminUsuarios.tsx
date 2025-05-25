@@ -18,6 +18,7 @@ const AdminUsuarios: React.FC = () => {
 
   const [editandoId, setEditandoId] = useState<string | null>(null);
   const [editUsuario, setEditUsuario] = useState({ nombre: '', email: '', rol: 'cajero' });
+  const [toast, setToast] = useState('');
 
   const usuarioSchema = Yup.object().shape({
     nombre: Yup.string().required('El nombre es obligatorio'),
@@ -35,8 +36,12 @@ const AdminUsuarios: React.FC = () => {
     try {
       await editarUsuario(id, editUsuario);
       setEditandoId(null);
-    } catch {
-      // Manejo de error si es necesario
+      setToast('Usuario editado correctamente');
+      setTimeout(() => setToast(''), 2500);
+    } catch (e) {
+      // @ts-expect-error: error puede no tener response
+      setToast(e?.response?.data?.message || 'Error al editar usuario');
+      setTimeout(() => setToast(''), 3000);
     }
   };
   const cancelarEdicion = () => setEditandoId(null);
@@ -47,8 +52,12 @@ const AdminUsuarios: React.FC = () => {
     try {
       await eliminarUsuario(id);
       if (editandoId === id) setEditandoId(null);
-    } catch {
-      // Manejo de error si es necesario
+      setToast('Usuario eliminado correctamente');
+      setTimeout(() => setToast(''), 2500);
+    } catch (e) {
+      // @ts-expect-error: error puede no tener response
+      setToast(e?.response?.data?.message || 'Error al eliminar usuario');
+      setTimeout(() => setToast(''), 3000);
     }
   };
 
@@ -65,6 +74,12 @@ const AdminUsuarios: React.FC = () => {
         <meta property="og:site_name" content="CajaPyme" />
       </Helmet>
       <div className="max-w-2xl mx-auto py-8 animate-fade-in">
+        {/* Toast de notificación */}
+        {toast && (
+          <div className="fixed top-4 right-4 z-50 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg animate-fade-in transition-opacity">
+            {toast}
+          </div>
+        )}
         <h1 className="text-2xl font-bold text-blue-800 mb-4 flex items-center gap-2">
           <svg className="h-7 w-7 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6 3.87V4a4 4 0 10-8 0v16m8 0a4 4 0 01-8 0" />
