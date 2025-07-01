@@ -6,8 +6,11 @@
     "test": "jest --runInBand --detectOpenHandles",
     "test:watch": "jest --watchAll",
     "dev": "ts-node-dev src/index.ts",
-    "build": "tsc",
-    "start": "node dist/index.js"
+    "build": "tsc && npx prisma generate",
+    "start": "node dist/index.js",
+    "postinstall": "npx prisma generate",
+    "railway:build": "npm install && npm run build",
+    "railway:start": "npm start"
   },
   "keywords": [],
   "author": "",
